@@ -1,0 +1,38 @@
+# Compiled output
+out/
+dist/
+*.vsix
+
+# Node modules
+node_modules/
+
+# VS Code test files
+.vscode-test/
+.vscode-test.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp

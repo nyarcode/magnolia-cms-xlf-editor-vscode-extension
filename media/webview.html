@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NyarCode XLF Editor</title>
+    <link rel="stylesheet" href="{{cssUri}}" />
+  </head>
+  <body>
+    <div class="toolbar">
+      <img src="{{logoUri}}" alt="Nyarcode" class="logo" />
+      <input
+        class="filter"
+        type="text"
+        placeholder="Filter..."
+        oninput="filterRows()"
+      />
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <span id="theme-icon">☀️</span>
+      </button>
+      <button class="save-btn" onclick="saveTranslations()">
+        <span id="unsaved-indicator" class="unsaved-dot" style="display: none"
+          >●</span
+        >
+        Save
+      </button>
+    </div>
+    <div class="table-container">
+      <table id="xlfTable">
+        <colgroup>
+          <col id="col-number" style="width: 60px; min-width: 50px" />
+          <col id="col-original" style="width: 45%; min-width: 25%" />
+          <col id="col-translation" style="width: 45%; min-width: 25%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th id="th-number">#</th>
+            <th id="th-original">
+              Original ({{sourceLanguage}})
+              <div class="resizer" data-col="col-original"></div>
+            </th>
+            <th id="th-translation">
+              Translation ({{targetLanguage}})
+              <div class="resizer" data-col="col-translation"></div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {{rows}}
+        </tbody>
+      </table>
+    </div>
+    <script>
+      const vscode = acquireVsCodeApi();
+
+      function toggleTheme() {
+        document.body.classList.toggle("light-theme");
+        const icon = document.getElementById("theme-icon");
+        icon.textContent = document.body.classList.contains("light-theme")
+          ? "🌙"
+          : "☀️";
+      }
+
+      function unescapeHtml(text) {
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = text;
+        return textarea.value;
+      }
+
+      let hasUnsavedChanges = false;
+      const originalValues = new Map();
+
+      function updateUnsavedIndicator() {
+        const indicator = document.getElementById("unsaved-indicator");
+        indicator.style.display = hasUnsavedChanges ? "inline" : "none";
+      }
+
+      window.addEventListener("load", () => {
+        const rows = document.querySelectorAll("#xlfTable tbody tr");
+        rows.forEach((row, idx) => {
+          const sourceCell = row.cells[1];
+          const textarea = row.cells[2].querySelector("textarea");
+          sourceCell.textContent = unescapeHtml(sourceCell.textContent);
+          textarea.value = unescapeHtml(textarea.value);
+
+          originalValues.set(idx, textarea.value);
+
+          textarea.addEventListener("input", () => {
+            hasUnsavedChanges = true;
+            updateUnsavedIndicator();
+          });
+        });
+      });
+
+      function filterRows() {
+        const filter = document.querySelector(".filter").value.toLowerCase();
+        const rows = document.querySelectorAll("#xlfTable tbody tr");
+        rows.forEach((row) => {
+          const original = row.cells[1].innerText.toLowerCase();
+          const translation = row.cells[2]
+            .querySelector("textarea")
+            .value.toLowerCase();
+          row.style.display =
+            original.includes(filter) || translation.includes(filter)
+              ? ""
+              : "none";
+        });
+      }
+      function saveTranslations() {
+        const inputs = document.querySelectorAll("#xlfTable tbody textarea");
+        const pairs = Array.from(inputs).map((input, idx) => ({
+          source:
+            document.querySelectorAll("#xlfTable tbody tr")[idx].cells[1]
+              .innerText,
+          target: input.value,
+        }));
+        vscode.postMessage({ command: "saveTranslations", pairs });
+
+        inputs.forEach((input, idx) => {
+          originalValues.set(idx, input.value);
+        });
+        hasUnsavedChanges = false;
+        updateUnsavedIndicator();
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+          e.preventDefault();
+          saveTranslations();
+        }
+      });
+
+      let startX, startWidth, resizerCol, nextCol, startNextWidth;
+      document.querySelectorAll(".resizer").forEach((resizer) => {
+        resizer.addEventListener("mousedown", function (e) {
+          resizerCol = document.getElementById(resizer.dataset.col);
+          const cols = Array.from(document.querySelectorAll("colgroup col"));
+          const currentIndex = cols.indexOf(resizerCol);
+          nextCol = cols[currentIndex + 1];
+
+          startX = e.pageX;
+          startWidth = parseInt(
+            document.defaultView.getComputedStyle(resizerCol).width,
+            10
+          );
+          startNextWidth = parseInt(
+            document.defaultView.getComputedStyle(nextCol).width,
+            10
+          );
+          document.documentElement.addEventListener("mousemove", onMouseMove);
+          document.documentElement.addEventListener("mouseup", onMouseUp);
+          e.preventDefault();
+        });
+      });
+      function onMouseMove(e) {
+        if (!resizerCol || !nextCol) return;
+        const diff = e.pageX - startX;
+        const table = document.getElementById("xlfTable");
+        const minWidth = table.offsetWidth * 0.25;
+
+        let newWidth = startWidth + diff;
+        let newNextWidth = startNextWidth - diff;
+
+        if (newWidth < minWidth) {
+          newWidth = minWidth;
+          newNextWidth = startWidth + startNextWidth - minWidth;
+        }
+        if (newNextWidth < minWidth) {
+          newNextWidth = minWidth;
+          newWidth = startWidth + startNextWidth - minWidth;
+        }
+
+        resizerCol.style.width = newWidth + "px";
+        nextCol.style.width = newNextWidth + "px";
+      }
+      function onMouseUp() {
+        document.documentElement.removeEventListener("mousemove", onMouseMove);
+        document.documentElement.removeEventListener("mouseup", onMouseUp);
+        resizerCol = null;
+        nextCol = null;
+      }
+    </script>
+  </body>
+</html>

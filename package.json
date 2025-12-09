@@ -1,0 +1,80 @@
+{
+  "name": "nyarcode-xlf-editor",
+  "displayName": "NyarCode XLF Editor",
+  "description": "Read and edit XLF files from Magnolia CMS.",
+  "keywords": ["xlf", "xliff", "translation", "i18n", "magnolia"],
+  "version": "0.0.1",
+  "license": "MIT",
+  "publisher": "nyarcode",
+  "icon": "resources/logo-128.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nyarcode/magnolia-cms-xlf-editor-vscode-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nyarcode/magnolia-cms-xlf-editor-vscode-extension/issues"
+  },
+  "homepage": "https://github.com/nyarcode/magnolia-cms-xlf-editor-vscode-extension#readme",
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "nyarcode-xlf-editor.openXlfEditor",
+        "title": "XLF Editor: Open editor"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "nyarcode-xlf-editor.openXlfEditor",
+          "when": "resourceExtname == .xlf || resourceExtname == .xliff",
+          "group": "navigation@10"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nyarcode-xlf-editor-sidebar",
+          "title": "NyarCode XLF Editor",
+          "icon": "resources/logo.png"
+        }
+      ]
+    },
+    "views": {
+      "nyarcode-xlf-editor-sidebar": [
+        {
+          "id": "nyarcode-xlf-editor-sidebar-view",
+          "name": "Open XLF File",
+          "icon": "resources/logo.png"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.106.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.46.3",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}

@@ -1,0 +1,113 @@
+:root {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #2d2d30;
+  --text-primary: #cccccc;
+  --text-secondary: #9d9d9d;
+  --border-color: #3e3e42;
+  --accent-color: #0078d4;
+  --accent-hover: #005fa3;
+  --input-bg: #3c3c3c;
+  --shadow: rgba(0, 0, 0, 0.3);
+}
+
+.light-theme {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f8fa;
+  --bg-tertiary: #f3f6fa;
+  --text-primary: #222222;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --accent-color: #0078d4;
+  --accent-hover: #005fa3;
+  --input-bg: #ffffff;
+  --shadow: rgba(60, 60, 60, 0.04);
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 2em;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 1em;
+  right: 1em;
+  padding: 8px 12px;
+  font-size: 1em;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 100;
+}
+
+.theme-toggle:hover {
+  background: var(--border-color);
+}
+
+.about-box {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px 0 var(--shadow);
+  padding: 2em;
+  max-width: 600px;
+  margin: 2em auto;
+  text-align: center;
+}
+
+.logo {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1.5em;
+  display: block;
+  filter: invert(1);
+  transition: filter 0.2s;
+}
+
+.light-theme .logo {
+  filter: invert(0);
+}
+
+h1 {
+  color: var(--accent-color);
+  margin-top: 0;
+}
+
+p {
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+ul {
+  text-align: left;
+  list-style: none;
+  padding: 0;
+}
+
+ul li {
+  padding: 0.5em 0;
+  padding-left: 1.5em;
+  position: relative;
+}
+
+ul li:before {
+  content: "✓";
+  color: var(--accent-color);
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.footer {
+  margin-top: 2em;
+  font-size: 0.95em;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 1em;
+}
