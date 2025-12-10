@@ -1,36 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About NyarCode XLF Editor</title>
-  <link rel="stylesheet" href="{{cssUri}}" />
-</head>
-<body>
-  <button class="theme-toggle" onclick="toggleTheme()">
-    <span id="theme-icon">☀️</span>
-  </button>
-  <div class="about-box">
-    <img src="{{logoUri}}" alt="Nyarcode Logo" class="logo">
-    <h1>XLF Editor</h1>
-    <p>Extension for Visual Studio Code to easily view, filter, and edit XLF/XLIFF files from Magnolia CMS with a modern interface.</p>
-    <ul>
-      <li>Two-column editing: original and translation</li>
-      <li>Instant filter with real-time search</li>
-      <li>Resizable and adaptable columns</li>
-      <li>Multiline textarea support</li>
-      <li>Dark/Light theme toggle</li>
-      <li>HTML escape/unescape option</li>
-      <li>Modern and comfortable UI</li>
-    </ul>
-    <div class="footer">Developed by Nyarcode · 2025</div>
-  </div>
-  <script>
-    function toggleTheme() {
-      document.body.classList.toggle('light-theme');
-      const icon = document.getElementById('theme-icon');
-      icon.textContent = document.body.classList.contains('light-theme') ? '🌙' : '☀️';
-    }
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About NyarCode XLF Editor</title>
+    <link rel="stylesheet" href="{{cssUri}}" />
+  </head>
+  <body>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon">☀️</span>
+    </button>
+    <div class="about-box">
+      <img src="{{logoUri}}" alt="Nyarcode Logo" class="logo" />
+      <h1>NyarCode XLF Editor</h1>
+      <h2>Magnolia CMS Localization Tool</h2>
+      <p>
+        Extension for Visual Studio Code to easily view, filter, and edit
+        XLF/XLIFF files from Magnolia CMS with a modern interface.
+      </p>
+      <ul>
+        <li>Two-column editing: original and translation</li>
+        <li>Instant filter with real-time search</li>
+        <li>Resizable and adaptable columns</li>
+        <li>Multiline textarea support</li>
+        <li>Dark/Light theme toggle</li>
+        <li>Modern and comfortable UI</li>
+      </ul>
+      <div class="footer">
+        © <span id="year"></span> David Cameselle (Nyarcode) · MIT License
+      </div>
+    </div>
+    <script>
+      function toggleTheme() {
+        document.body.classList.toggle("light-theme");
+        const icon = document.getElementById("theme-icon");
+        icon.textContent = document.body.classList.contains("light-theme")
+          ? "🌙"
+          : "☀️";
+      }
+    </script>
+  </body>
 </html>

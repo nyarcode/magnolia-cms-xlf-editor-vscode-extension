@@ -5,9 +5,9 @@ A Visual Studio Code extension for reading and editing XLF (XLIFF) files from Ma
 ## Features
 
 - **Visual XLF Editor**: Edit XLF/XLIFF translation files with an intuitive interface
-- **Context Menu Integration**: Right-click on `.xlf` file to open the editor
+- **Context Menu Integration**: Right-click on `.xlf` or `.xliff` file to open the editor
 - **Sidebar Access**: Quick access via the Activity Bar sidebar
-- **Magnolia CMS Support**: Optimized for Magnolia CMS translation files
+- **For Magnolia CMS**: Optimized for Magnolia CMS translation files
 
 ## Usage
 
@@ -15,7 +15,7 @@ A Visual Studio Code extension for reading and editing XLF (XLIFF) files from Ma
 
 There are three ways to open an XLF file with the editor:
 
-1. **Right-click** on any `.xlf` file in the Explorer and select "XLF Editor: Open editor"
+1. **Right-click** on any `.xlf` or `.xliff` file in the Explorer and select "XLF Editor: Open editor"
 2. **Click** on the NyarCode XLF Editor icon in the Activity Bar (left sidebar)
 3. Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run "XLF Editor: Open editor"
 
