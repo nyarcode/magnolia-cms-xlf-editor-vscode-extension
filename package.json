@@ -2,7 +2,13 @@
   "name": "nyarcode-xlf-editor",
   "displayName": "NyarCode XLF Editor",
   "description": "Read and edit XLF files from Magnolia CMS.",
-  "keywords": ["xlf", "xliff", "translation", "i18n", "magnolia"],
+  "keywords": [
+    "xlf",
+    "xliff",
+    "translation",
+    "i18n",
+    "magnolia"
+  ],
   "version": "0.0.1",
   "license": "MIT",
   "publisher": "nyarcode",
@@ -68,13 +74,13 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.106.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.46.3",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "typescript-eslint": "^8.46.3"
   }
 }
