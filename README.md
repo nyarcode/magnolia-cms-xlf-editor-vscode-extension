@@ -37,6 +37,12 @@ None at the moment. Please report issues on the [GitHub repository](https://gith
 
 ## Release Notes
 
+### 0.0.2
+
+- Improved editing and saving of translations.
+- Rich text editing powered by Trumbowyg.
+- UI and user experience improvements.
+
 ### 0.0.1
 
 Initial release of NyarCode XLF Editor

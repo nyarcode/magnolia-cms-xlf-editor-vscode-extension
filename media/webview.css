@@ -130,7 +130,8 @@ body {
   animation: pulse 2s ease-in-out infinite;
 }
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -218,4 +219,89 @@ td textarea:focus {
   border: 1.5px solid var(--accent-color);
   outline: none;
   box-shadow: 0 2px 8px 0 rgba(0, 120, 212, 0.08);
+}
+
+.trumbowyg-box svg {
+  filter: invert(1) hue-rotate(180deg) brightness(1.2);
+}
+.light-theme .trumbowyg-box svg {
+  filter: none;
+}
+.table-container {
+  background: var(--bg-primary);
+  border-radius: 6px;
+}
+#xlfTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+#xlfTable th,
+#xlfTable td {
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  vertical-align: top;
+}
+#xlfTable th {
+  background: var(--header-bg);
+  color: var(--text-primary);
+}
+#xlfTable td {
+  background: var(--bg-secondary);
+}
+.trumbowyg-box {
+  min-height: 120px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+}
+.trumbowyg-editor {
+  min-height: 100px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 4px;
+  overflow-x: auto;
+  word-break: break-word;
+  white-space: normal;
+}
+.trumbowyg-editor p {
+  margin: 0;
+}
+.trumbowyg-editor br {
+  display: none;
+}
+.trumbowyg-editor p:empty {
+  display: none;
+}
+.trumbowyg-button-pane {
+  background: var(--header-bg);
+}
+.trumbowyg-editor[contenteditable="true"] {
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+.readonly-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  resize: vertical;
+  font: inherit;
+  padding: 6px 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-radius: 4px;
+  field-sizing: content;
+  cursor: default;
 }

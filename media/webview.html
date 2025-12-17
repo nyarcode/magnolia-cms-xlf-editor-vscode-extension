@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NyarCode XLF Editor</title>
     <link rel="stylesheet" href="{{cssUri}}" />
+    {{trumbowygCss}}
+    <style>
+      .trumbowyg-button-pane {
+        background: #282828;
+      }
+      .light-theme .trumbowyg-button-pane {
+        background: var(--header-bg);
+      }
+    </style>
   </head>
   <body>
     <div class="toolbar">
@@ -39,10 +48,7 @@
               Original ({{sourceLanguage}})
               <div class="resizer" data-col="col-original"></div>
             </th>
-            <th id="th-translation">
-              Translation ({{targetLanguage}})
-              <div class="resizer" data-col="col-translation"></div>
-            </th>
+            <th id="th-translation">Translation ({{targetLanguage}})</th>
           </tr>
         </thead>
         <tbody>
@@ -50,6 +56,8 @@
         </tbody>
       </table>
     </div>
+    <script src="{{jqueryJsUri}}"></script>
+    <script src="{{trumbowygJsUri}}"></script>
     <script>
       const vscode = acquireVsCodeApi();
 
@@ -78,18 +86,123 @@
       window.addEventListener("load", () => {
         const rows = document.querySelectorAll("#xlfTable tbody tr");
         rows.forEach((row, idx) => {
-          const sourceCell = row.cells[1];
-          const textarea = row.cells[2].querySelector("textarea");
-          sourceCell.textContent = unescapeHtml(sourceCell.textContent);
-          textarea.value = unescapeHtml(textarea.value);
+          const sourceTextarea = row.cells[1].querySelector("textarea");
+          if (sourceTextarea) {
+            sourceTextarea.value = unescapeHtml(sourceTextarea.value);
+          }
 
-          originalValues.set(idx, textarea.value);
-
-          textarea.addEventListener("input", () => {
-            hasUnsavedChanges = true;
-            updateUnsavedIndicator();
-          });
+          const targetTextarea = row.cells[2].querySelector("textarea");
+          if (targetTextarea) {
+            targetTextarea.value = unescapeHtml(targetTextarea.value);
+            originalValues.set(idx, targetTextarea.value);
+          }
         });
+        setTimeout(() => {
+          document
+            .querySelectorAll("textarea.trumbowyg-editor")
+            .forEach((textarea) => {
+              const $ed = $(textarea)
+                .siblings(".trumbowyg-box")
+                .find(".trumbowyg-editor");
+              if ($ed.length) {
+                $ed[0].addEventListener("copy", (e) => {
+                  e.preventDefault();
+                  const tr = textarea.closest("tr");
+                  if (!tr) return;
+                  const cell = tr.cells[2];
+                  let text = "";
+                  let html = "";
+                  if (window.getSelection && window.getSelection().toString()) {
+                    text = window.getSelection().toString();
+                    html = text;
+                  } else {
+                    const textarea = cell.querySelector(
+                      "textarea.trumbowyg-editor"
+                    );
+                    if (textarea) {
+                      html = $(textarea).trumbowyg("html");
+                      const temp = document.createElement("div");
+                      temp.innerHTML = html;
+                      text = temp.innerText;
+                    }
+                  }
+                  e.clipboardData.setData("text/plain", text);
+                });
+              }
+            });
+          if (window.$ && window.$.fn && window.$.fn.trumbowyg) {
+            document
+              .querySelectorAll("textarea.trumbowyg-editor")
+              .forEach((textarea) => {
+                if (!$(textarea).parent().hasClass("trumbowyg-box")) {
+                  $(textarea).trumbowyg({
+                    btns: [
+                      [
+                        "bold",
+                        "italic",
+                        "underline",
+                        "strikethrough",
+                        "superscript",
+                        "subscript",
+                        "link",
+                        "removeformat",
+                        "viewHTML",
+                        "fullscreen",
+                      ],
+                    ],
+                  });
+                  $(textarea).on("tbwchange", () => {
+                    hasUnsavedChanges = true;
+                    updateUnsavedIndicator();
+                  });
+                }
+              });
+
+            document
+              .querySelectorAll("textarea.trumbowyg-editor-readonly")
+              .forEach((textarea) => {
+                if (!$(textarea).parent().hasClass("trumbowyg-box")) {
+                  $(textarea).trumbowyg({
+                    btns: [["viewHTML"]],
+                    removeformatPasted: true,
+                  });
+                  $(textarea).on("tbwchange tbwinit", function () {
+                    const $editor = $(textarea)
+                      .siblings(".trumbowyg-box")
+                      .find(".trumbowyg-editor");
+                    $editor.attr("contenteditable", "false");
+                    $editor.css("cursor", "default");
+                  });
+                  $(textarea)
+                    .siblings(".trumbowyg-box")
+                    .find(".trumbowyg-editor")
+                    .on("keydown paste cut", function (e) {
+                      if (!e.ctrlKey && !e.metaKey) {
+                        if (
+                          e.type !== "keydown" ||
+                          (e.key !== "c" &&
+                            e.key !== "C" &&
+                            e.key !== "a" &&
+                            e.key !== "A")
+                        ) {
+                          e.preventDefault();
+                        }
+                      }
+                    });
+                }
+              });
+          }
+          document
+            .querySelectorAll(
+              "textarea:not(.trumbowyg-editor):not(.trumbowyg-editor-readonly):not(.readonly-textarea)"
+            )
+            .forEach((textarea) => {
+              textarea.addEventListener("input", () => {
+                hasUnsavedChanges = true;
+                updateUnsavedIndicator();
+              });
+            });
+        }, 0);
       });
 
       function filterRows() {
@@ -97,9 +210,12 @@
         const rows = document.querySelectorAll("#xlfTable tbody tr");
         rows.forEach((row) => {
           const original = row.cells[1].innerText.toLowerCase();
-          const translation = row.cells[2]
-            .querySelector("textarea")
-            .value.toLowerCase();
+          const textarea = row.cells[2].querySelector(
+            "textarea.trumbowyg-editor"
+          );
+          const translation = textarea
+            ? $(textarea).trumbowyg("html").toLowerCase()
+            : "";
           row.style.display =
             original.includes(filter) || translation.includes(filter)
               ? ""
@@ -107,17 +223,28 @@
         });
       }
       function saveTranslations() {
-        const inputs = document.querySelectorAll("#xlfTable tbody textarea");
-        const pairs = Array.from(inputs).map((input, idx) => ({
-          source:
-            document.querySelectorAll("#xlfTable tbody tr")[idx].cells[1]
-              .innerText,
-          target: input.value,
-        }));
+        const rows = document.querySelectorAll("#xlfTable tbody tr");
+        const pairs = Array.from(rows).map((row, idx) => {
+          const textarea = row.cells[2].querySelector("textarea");
+          let value = "";
+          if (textarea.classList.contains("trumbowyg-editor")) {
+            value = $(textarea).trumbowyg("html");
+            value = value.replace(/<p><br><\/p>/g, "");
+            value = value.replace(/<p><\/p>/g, "");
+            value = value.replace(/<br>/g, "");
+            value = value.trim();
+          } else {
+            value = textarea.value;
+          }
+          return {
+            source: row.cells[1].innerText,
+            target: value,
+          };
+        });
         vscode.postMessage({ command: "saveTranslations", pairs });
 
-        inputs.forEach((input, idx) => {
-          originalValues.set(idx, input.value);
+        pairs.forEach((pair, idx) => {
+          originalValues.set(idx, pair.target);
         });
         hasUnsavedChanges = false;
         updateUnsavedIndicator();
