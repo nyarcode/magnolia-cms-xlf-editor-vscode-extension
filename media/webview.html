@@ -38,8 +38,12 @@
       <table id="xlfTable">
         <colgroup>
           <col id="col-number" style="width: 60px; min-width: 50px" />
-          <col id="col-original" style="width: 45%; min-width: 25%" />
-          <col id="col-translation" style="width: 45%; min-width: 25%" />
+          <col id="col-original" style="width: 42%; min-width: 25%" />
+          <col
+            id="col-copy"
+            style="width: 50px; min-width: 50px; max-width: 50px"
+          />
+          <col id="col-translation" style="width: 42%; min-width: 25%" />
         </colgroup>
         <thead>
           <tr>
@@ -47,6 +51,9 @@
             <th id="th-original">
               Original ({{sourceLanguage}})
               <div class="resizer" data-col="col-original"></div>
+            </th>
+            <th id="th-copy">
+              <div class="resizer" data-col="col-copy"></div>
             </th>
             <th id="th-translation">Translation ({{targetLanguage}})</th>
           </tr>
@@ -60,6 +67,63 @@
     <script src="{{trumbowygJsUri}}"></script>
     <script>
       const vscode = acquireVsCodeApi();
+
+      vscode.setState({ fileUri: "{{fileUri}}" });
+
+      function forceButtonColumnWidth(skipMainColumns = false) {
+        const copyWidth = 50;
+
+        const copyCol = document.getElementById("col-copy");
+
+        if (copyCol) {
+          copyCol.style.width = copyWidth + "px";
+          copyCol.style.minWidth = copyWidth + "px";
+          copyCol.style.maxWidth = copyWidth + "px";
+        }
+
+        const thCopy = document.getElementById("th-copy");
+        if (thCopy) {
+          thCopy.style.width = copyWidth + "px";
+          thCopy.style.minWidth = copyWidth + "px";
+          thCopy.style.maxWidth = copyWidth + "px";
+        }
+
+        document.querySelectorAll(".copy-cell").forEach((cell) => {
+          cell.style.width = copyWidth + "px";
+          cell.style.minWidth = copyWidth + "px";
+          cell.style.maxWidth = copyWidth + "px";
+        });
+
+        if (!skipMainColumns) {
+          const table = document.getElementById("xlfTable");
+          if (!table) return;
+
+          const tableWidth = table.offsetWidth;
+          const numberWidth = 60;
+          const availableWidth = tableWidth - numberWidth - copyWidth;
+          const halfAvailable = Math.floor(availableWidth / 2);
+
+          const colNumber = document.getElementById("col-number");
+          const colOriginal = document.getElementById("col-original");
+          const colTranslation = document.getElementById("col-translation");
+
+          if (colNumber) {
+            colNumber.style.width = numberWidth + "px";
+          }
+
+          if (colOriginal) {
+            colOriginal.style.width = halfAvailable + "px";
+          }
+
+          if (colTranslation) {
+            colTranslation.style.width = halfAvailable + "px";
+          }
+        }
+      }
+
+      forceButtonColumnWidth();
+
+      setTimeout(forceButtonColumnWidth, 10);
 
       function toggleTheme() {
         document.body.classList.toggle("light-theme");
@@ -81,14 +145,37 @@
       function updateUnsavedIndicator() {
         const indicator = document.getElementById("unsaved-indicator");
         indicator.style.display = hasUnsavedChanges ? "inline" : "none";
+
+        vscode.postMessage({
+          command: "updateDirtyState",
+          isDirty: hasUnsavedChanges,
+        });
       }
 
       window.addEventListener("load", () => {
+        forceButtonColumnWidth();
+
         const rows = document.querySelectorAll("#xlfTable tbody tr");
         rows.forEach((row, idx) => {
           const sourceTextarea = row.cells[1].querySelector("textarea");
           if (sourceTextarea) {
             sourceTextarea.value = unescapeHtml(sourceTextarea.value);
+            sourceTextarea.addEventListener("keydown", (e) => {
+              if (!e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+              } else if (
+                e.key !== "c" &&
+                e.key !== "C" &&
+                e.key !== "a" &&
+                e.key !== "A"
+              ) {
+                e.preventDefault();
+              }
+            });
+            sourceTextarea.addEventListener("paste", (e) => e.preventDefault());
+            sourceTextarea.addEventListener("cut", (e) => e.preventDefault());
+            sourceTextarea.addEventListener("drop", (e) => e.preventDefault());
+            sourceTextarea.addEventListener("input", (e) => e.preventDefault());
           }
 
           const targetTextarea = row.cells[2].querySelector("textarea");
@@ -109,7 +196,7 @@
                   e.preventDefault();
                   const tr = textarea.closest("tr");
                   if (!tr) return;
-                  const cell = tr.cells[2];
+                  const cell = tr.cells[3];
                   let text = "";
                   let html = "";
                   if (window.getSelection && window.getSelection().toString()) {
@@ -136,6 +223,21 @@
               .forEach((textarea) => {
                 if (!$(textarea).parent().hasClass("trumbowyg-box")) {
                   $(textarea).trumbowyg({
+                    removeformatPasted: false,
+                    autogrow: true,
+                    tagsToRemove: [],
+                    tagsToKeep: [
+                      "div",
+                      "span",
+                      "section",
+                      "article",
+                      "header",
+                      "footer",
+                      "nav",
+                      "aside",
+                      "main",
+                    ],
+                    semantic: false,
                     btns: [
                       [
                         "bold",
@@ -165,6 +267,7 @@
                   $(textarea).trumbowyg({
                     btns: [["viewHTML"]],
                     removeformatPasted: true,
+                    disabled: true,
                   });
                   $(textarea).on("tbwchange tbwinit", function () {
                     const $editor = $(textarea)
@@ -176,7 +279,7 @@
                   $(textarea)
                     .siblings(".trumbowyg-box")
                     .find(".trumbowyg-editor")
-                    .on("keydown paste cut", function (e) {
+                    .on("keydown paste cut drop input", function (e) {
                       if (!e.ctrlKey && !e.metaKey) {
                         if (
                           e.type !== "keydown" ||
@@ -187,7 +290,15 @@
                         ) {
                           e.preventDefault();
                         }
+                      } else if (e.type !== "keydown") {
+                        e.preventDefault();
                       }
+                    });
+                  $(textarea)
+                    .siblings(".trumbowyg-box")
+                    .find(".trumbowyg-editor")
+                    .on("dragstart dragover", function (e) {
+                      e.preventDefault();
                     });
                 }
               });
@@ -210,7 +321,7 @@
         const rows = document.querySelectorAll("#xlfTable tbody tr");
         rows.forEach((row) => {
           const original = row.cells[1].innerText.toLowerCase();
-          const textarea = row.cells[2].querySelector(
+          const textarea = row.cells[3].querySelector(
             "textarea.trumbowyg-editor"
           );
           const translation = textarea
@@ -222,10 +333,31 @@
               : "none";
         });
       }
+
+      function copyToTranslation(idx) {
+        const rows = document.querySelectorAll("#xlfTable tbody tr");
+        const row = rows[idx];
+        if (!row) return;
+
+        const sourceTextarea = row.cells[1].querySelector("textarea");
+        const targetTextarea = row.cells[3].querySelector("textarea");
+        if (!sourceTextarea || !targetTextarea) return;
+
+        if (targetTextarea.classList.contains("trumbowyg-editor")) {
+          const sourceContent = $(sourceTextarea).trumbowyg("html");
+          $(targetTextarea).trumbowyg("html", sourceContent);
+        } else {
+          targetTextarea.value = sourceTextarea.value;
+        }
+
+        hasUnsavedChanges = true;
+        updateUnsavedIndicator();
+      }
+
       function saveTranslations() {
         const rows = document.querySelectorAll("#xlfTable tbody tr");
         const pairs = Array.from(rows).map((row, idx) => {
-          const textarea = row.cells[2].querySelector("textarea");
+          const textarea = row.cells[3].querySelector("textarea");
           let value = "";
           if (textarea.classList.contains("trumbowyg-editor")) {
             value = $(textarea).trumbowyg("html");
@@ -260,10 +392,19 @@
       let startX, startWidth, resizerCol, nextCol, startNextWidth;
       document.querySelectorAll(".resizer").forEach((resizer) => {
         resizer.addEventListener("mousedown", function (e) {
-          resizerCol = document.getElementById(resizer.dataset.col);
-          const cols = Array.from(document.querySelectorAll("colgroup col"));
-          const currentIndex = cols.indexOf(resizerCol);
-          nextCol = cols[currentIndex + 1];
+          const colId = resizer.dataset.col;
+
+          forceButtonColumnWidth();
+
+          if (colId === "col-original" || colId === "col-copy") {
+            resizerCol = document.getElementById("col-original");
+            nextCol = document.getElementById("col-translation");
+          } else {
+            resizerCol = document.getElementById(colId);
+            const cols = Array.from(document.querySelectorAll("colgroup col"));
+            const currentIndex = cols.indexOf(resizerCol);
+            nextCol = cols[currentIndex + 1];
+          }
 
           startX = e.pageX;
           startWidth = parseInt(
@@ -299,6 +440,8 @@
 
         resizerCol.style.width = newWidth + "px";
         nextCol.style.width = newNextWidth + "px";
+
+        forceButtonColumnWidth(true);
       }
       function onMouseUp() {
         document.documentElement.removeEventListener("mousemove", onMouseMove);

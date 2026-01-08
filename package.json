@@ -9,7 +9,7 @@
     "i18n",
     "magnolia"
   ],
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "publisher": "nyarcode",
   "icon": "resources/logo-128.png",
@@ -28,7 +28,9 @@
     "url": "https://github.com/nyarcode/magnolia-cms-xlf-editor-vscode-extension/issues"
   },
   "homepage": "https://github.com/nyarcode/magnolia-cms-xlf-editor-vscode-extension#readme",
-  "activationEvents": [],
+  "activationEvents": [
+    "onWebviewPanel:nyarcodeXlfEditor"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [

@@ -4,6 +4,8 @@ import * as fs from "fs";
 import { getAboutHtml } from "./about";
 
 export function activate(context: vscode.ExtensionContext) {
+  const openPanels = new Map<string, vscode.WebviewPanel>();
+
   class XlfSidebarProvider implements vscode.TreeDataProvider<XlfSidebarItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<
       XlfSidebarItem | undefined | void
@@ -86,6 +88,167 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  vscode.window.registerWebviewPanelSerializer("nyarcodeXlfEditor", {
+    async deserializeWebviewPanel(
+      webviewPanel: vscode.WebviewPanel,
+      state: any
+    ): Promise<void> {
+      if (!state || !state.fileUri) {
+        return;
+      }
+
+      const xlfUri = vscode.Uri.parse(state.fileUri);
+      const fileKey = xlfUri.toString();
+      const fileName = path.basename(xlfUri.fsPath);
+
+      webviewPanel.title = `${fileName} - NyarCode XLF Editor`;
+
+      openPanels.set(fileKey, webviewPanel);
+
+      webviewPanel.onDidDispose(() => {
+        openPanels.delete(fileKey);
+      });
+
+      webviewPanel.webview.options = {
+        enableScripts: true,
+        localResourceRoots: [
+          vscode.Uri.file(path.join(context.extensionPath, "media")),
+          vscode.Uri.file(
+            path.join(context.extensionPath, "media", "trumbowyg", "ui")
+          ),
+          vscode.Uri.file(path.join(context.extensionPath, "resources")),
+        ],
+      };
+
+      webviewPanel.webview.html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: var(--vscode-editor-background);
+                color: var(--vscode-editor-foreground);
+              }
+              .loader {
+                text-align: center;
+              }
+              .spinner {
+                border: 3px solid var(--vscode-progressBar-background);
+                border-top: 3px solid var(--vscode-progressBar-foreground);
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 20px;
+              }
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="loader">
+              <div class="spinner"></div>
+              <p>Loading ${fileName}...</p>
+            </div>
+          </body>
+        </html>
+      `;
+
+      try {
+        const xlfContent = (
+          await vscode.workspace.fs.readFile(xlfUri)
+        ).toString();
+        const { pairs, sourceLanguage, targetLanguage } = parseXlf(xlfContent);
+
+        webviewPanel.webview.html = await getWebviewContent(
+          context,
+          webviewPanel,
+          pairs,
+          sourceLanguage,
+          targetLanguage,
+          xlfUri.toString()
+        );
+
+        webviewPanel.webview.onDidReceiveMessage(async (message) => {
+          if (message.command === "updateDirtyState") {
+            // Update panel title to show dirty state
+            const dirtyIndicator = message.isDirty ? "● " : "";
+            webviewPanel.title = `${dirtyIndicator}${fileName} - NyarCode XLF Editor`;
+          } else if (message.command === "saveTranslations") {
+            const newPairs = message.pairs;
+            const currentContent = (
+              await vscode.workspace.fs.readFile(xlfUri)
+            ).toString();
+            const newXlf = updateXlfWithTranslations(currentContent, newPairs);
+            await vscode.workspace.fs.writeFile(
+              xlfUri,
+              Buffer.from(newXlf, "utf8")
+            );
+
+            const updatedXlfContent = (
+              await vscode.workspace.fs.readFile(xlfUri)
+            ).toString();
+            const updatedData = parseXlf(updatedXlfContent);
+
+            webviewPanel.webview.html = await getWebviewContent(
+              context,
+              webviewPanel,
+              updatedData.pairs,
+              updatedData.sourceLanguage,
+              updatedData.targetLanguage,
+              xlfUri.toString()
+            );
+
+            vscode.window.showInformationMessage(
+              "Translations saved to the XLF file."
+            );
+          }
+        });
+      } catch (error) {
+        webviewPanel.webview.html = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <style>
+                body {
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                  margin: 0;
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                  background: var(--vscode-editor-background);
+                  color: var(--vscode-errorForeground);
+                }
+                .error {
+                  text-align: center;
+                  padding: 20px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="error">
+                <h2>Failed to restore XLF file</h2>
+                <p>${error}</p>
+              </div>
+            </body>
+          </html>
+        `;
+        vscode.window.showErrorMessage(`Failed to restore XLF file: ${error}`);
+      }
+    },
+  });
+
   async function openXlfEditor(resource?: vscode.Uri) {
     let xlfUri: vscode.Uri | undefined = resource;
     if (!xlfUri) {
@@ -98,13 +261,23 @@ export function activate(context: vscode.ExtensionContext) {
       }
       xlfUri = uris[0];
     }
+
+    const fileKey = xlfUri.toString();
+
+    const existingPanel = openPanels.get(fileKey);
+    if (existingPanel) {
+      existingPanel.reveal(vscode.ViewColumn.One);
+      return;
+    }
+
     const xlfContent = (await vscode.workspace.fs.readFile(xlfUri)).toString();
 
     const { pairs, sourceLanguage, targetLanguage } = parseXlf(xlfContent);
 
+    const fileName = path.basename(xlfUri.fsPath);
     const panel = vscode.window.createWebviewPanel(
       "nyarcodeXlfEditor",
-      "NyarCode XLF Editor",
+      `${fileName} - NyarCode XLF Editor`,
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -118,16 +291,27 @@ export function activate(context: vscode.ExtensionContext) {
       }
     );
 
+    openPanels.set(fileKey, panel);
+
+    panel.onDidDispose(() => {
+      openPanels.delete(fileKey);
+    });
+
     panel.webview.html = await getWebviewContent(
       context,
       panel,
       pairs,
       sourceLanguage,
-      targetLanguage
+      targetLanguage,
+      xlfUri.toString()
     );
 
     panel.webview.onDidReceiveMessage(async (message) => {
-      if (message.command === "saveTranslations") {
+      if (message.command === "updateDirtyState") {
+        // Update panel title to show dirty state
+        const dirtyIndicator = message.isDirty ? "● " : "";
+        panel.title = `${dirtyIndicator}${fileName} - NyarCode XLF Editor`;
+      } else if (message.command === "saveTranslations") {
         const newPairs = message.pairs;
         const newXlf = updateXlfWithTranslations(xlfContent, newPairs);
         await vscode.workspace.fs.writeFile(
@@ -145,7 +329,8 @@ export function activate(context: vscode.ExtensionContext) {
           panel,
           updatedData.pairs,
           updatedData.sourceLanguage,
-          updatedData.targetLanguage
+          updatedData.targetLanguage,
+          xlfUri.toString()
         );
 
         vscode.window.showInformationMessage(
@@ -161,7 +346,8 @@ async function getWebviewContent(
   panel: vscode.WebviewPanel,
   pairs: { source: string; target: string }[],
   sourceLanguage: string,
-  targetLanguage: string
+  targetLanguage: string,
+  fileUri: string
 ): Promise<string> {
   const trumbowygCssPath = vscode.Uri.file(
     path.join(
@@ -231,7 +417,7 @@ async function getWebviewContent(
 
       return `<tr><td class="row-number">${
         idx + 1
-      }</td><td>${originalCell}</td><td>${translationCell}</td></tr>`;
+      }</td><td class="cell-with-resizer">${originalCell}<div class="resizer" data-col="col-original"></div></td><td class="copy-cell"><button class="copy-btn" onclick="copyToTranslation(${idx})" title="Copy to translation">→</button><div class="resizer" data-col="col-copy"></div></td><td>${translationCell}</td></tr>`;
     })
     .join("");
   const trumbowygJsPath = vscode.Uri.file(
@@ -250,16 +436,27 @@ async function getWebviewContent(
   const cssUri = panel.webview.asWebviewUri(cssPath);
   const logoUri = panel.webview.asWebviewUri(logoPath);
   let html = fs.readFileSync(htmlPath.fsPath, "utf8");
+
+  const escapedFileUri = fileUri.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
   html = html
-    .replace("{{rows}}", rows)
-    .replace("{{cssUri}}", cssUri.toString())
-    .replace("{{logoUri}}", logoUri.toString())
-    .replace("{{jqueryJsUri}}", jqueryJsUri.toString())
-    .replace("{{trumbowygJsUri}}", trumbowygJsUri.toString())
-    .replace("{{trumbowygCss}}", `<style>${trumbowygCss}</style>`)
-    .replace("{{sourceLanguage}}", sourceLanguage)
-    .replace("{{targetLanguage}}", targetLanguage);
+    .replace(/\{\{rows\}\}/g, rows)
+    .replace(/\{\{cssUri\}\}/g, cssUri.toString())
+    .replace(/\{\{logoUri\}\}/g, logoUri.toString())
+    .replace(/\{\{jqueryJsUri\}\}/g, jqueryJsUri.toString())
+    .replace(/\{\{trumbowygJsUri\}\}/g, trumbowygJsUri.toString())
+    .replace(/\{\{trumbowygCss\}\}/g, `<style>${trumbowygCss}</style>`)
+    .replace(/\{\{sourceLanguage\}\}/g, sourceLanguage)
+    .replace(/\{\{targetLanguage\}\}/g, targetLanguage)
+    .replace(/\{\{fileUri\}\}/g, escapedFileUri);
   return html;
+}
+
+function escapeXmlEntities(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function updateXlfWithTranslations(
@@ -278,7 +475,8 @@ function updateXlfWithTranslations(
       targetContent,
       afterTarget
     ) => {
-      const newTarget = pairs[idx] ? pairs[idx].target : "";
+      const rawTarget = pairs[idx] ? pairs[idx].target : "";
+      const newTarget = rawTarget ? escapeXmlEntities(rawTarget) : "";
       idx++;
       let targetTag;
       if (newTarget === "") {

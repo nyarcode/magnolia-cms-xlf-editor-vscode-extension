@@ -68,4 +68,25 @@ suite("NyarCode XLF Editor Extension Test Suite", () => {
     await extension!.activate();
     assert.strictEqual(extension!.isActive, true);
   });
+
+  test("Webview serializer should be registered for nyarcodeXlfEditor", async () => {
+    const extension = vscode.extensions.getExtension(
+      "nyarcode.nyarcode-xlf-editor"
+    );
+    assert.ok(extension);
+    await extension!.activate();
+    assert.strictEqual(extension!.isActive, true);
+  });
+
+  test("Extension should activate on webview panel restore", () => {
+    const extension = vscode.extensions.getExtension(
+      "nyarcode.nyarcode-xlf-editor"
+    );
+    assert.ok(extension);
+    const packageJSON = extension!.packageJSON;
+    assert.ok(packageJSON.activationEvents);
+    assert.ok(
+      packageJSON.activationEvents.includes("onWebviewPanel:nyarcodeXlfEditor")
+    );
+  });
 });

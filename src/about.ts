@@ -15,14 +15,18 @@ export function getAboutHtml(
   const logoPath = vscode.Uri.file(
     path.join(context.extensionPath, "resources", "logo.png")
   );
+  const packageJsonPath = path.join(context.extensionPath, "package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  const version = packageJson.version || "0.0.0";
 
   const cssUri = webview.asWebviewUri(cssPath);
   const logoUri = webview.asWebviewUri(logoPath);
 
   let html = fs.readFileSync(htmlPath.fsPath, "utf8");
   html = html
-    .replace("{{cssUri}}", cssUri.toString())
-    .replace("{{logoUri}}", logoUri.toString());
+    .replace(/\{\{cssUri\}\}/g, cssUri.toString())
+    .replace(/\{\{logoUri\}\}/g, logoUri.toString())
+    .replace(/\{\{version\}\}/g, version);
 
   return html;
 }

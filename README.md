@@ -37,15 +37,40 @@ None at the moment. Please report issues on the [GitHub repository](https://gith
 
 ## Release Notes
 
-### 0.0.2
+## [0.0.3] <span style="font-size: smaller;">2026-01-08</span>
+
+### Fixed
+
+- HTML tags are now properly encoded as entities (e.g., `&lt;p&gt;` instead of `<p>`) when saving translations, fixing import issues in Magnolia CMS
+
+### Added
+
+- Copy to translation button to quickly copy original text to translation field
+- File name now displayed in panel title with unsaved changes indicator (●)
+- Version number displayed in About page
+- Session persistence: open XLF editor panels are now restored when reopening VS Code
+
+### Changed
+
+- Prevent duplicate tabs: opening the same file multiple times now focuses the existing tab instead of creating duplicates
+- Better resource management: improved performance and memory usage
+
+## [0.0.2] <span style="font-size: smaller;">2025-12-17</span>
+
+### Added
+
+- Rich text editing powered by Trumbowyg.
+
+### Changed
 
 - Improved editing and saving of translations.
-- Rich text editing powered by Trumbowyg.
 - UI and user experience improvements.
 
-### 0.0.1
+## [0.0.1] <span style="font-size: smaller;">2025-12-09</span>
 
 Initial release of NyarCode XLF Editor
+
+### Added
 
 - Basic XLF file editing functionality
 - Context menu integration for .xlf files

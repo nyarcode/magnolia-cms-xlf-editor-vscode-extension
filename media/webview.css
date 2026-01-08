@@ -177,8 +177,16 @@ th {
   position: relative;
   border-bottom: 2px solid var(--border-color);
   box-shadow: 0 2px 4px 0 var(--shadow);
+  vertical-align: middle;
+  height: 50px;
 }
 #th-number {
+  text-align: center;
+}
+#th-copy {
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
   text-align: center;
 }
 tr:nth-child(even) td {
@@ -199,6 +207,72 @@ th .resizer {
 }
 th .resizer:hover {
   background: rgba(0, 120, 212, 0.4);
+}
+td {
+  position: relative;
+}
+.copy-cell {
+  text-align: center;
+  vertical-align: middle !important;
+  padding: 8px 4px !important;
+  position: relative;
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+}
+#col-copy {
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+}
+.copy-cell .copy-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--accent-color);
+  cursor: pointer;
+  padding: 5px 0px;
+  margin-right: 5px;
+  border-radius: 4px;
+  font-size: 1.2em;
+  line-height: 1;
+  transition: all 0.2s;
+  min-width: 32px;
+}
+.copy-cell .copy-btn:hover {
+  background: var(--accent-color);
+  color: #fff;
+  box-shadow: 0 2px 4px var(--shadow);
+}
+.copy-cell .copy-btn:active {
+  transform: scale(0.95);
+}
+.copy-cell .resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  background: rgba(0, 120, 212, 0.1);
+  z-index: 10;
+}
+.copy-cell .resizer:hover {
+  background: rgba(0, 120, 212, 0.3);
+}
+td.cell-with-resizer .resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  background: rgba(0, 120, 212, 0.1);
+  z-index: 10;
+}
+td.cell-with-resizer .resizer:hover {
+  background: rgba(0, 120, 212, 0.3);
 }
 td textarea {
   width: 100%;
@@ -241,14 +315,15 @@ td textarea:focus {
 #xlfTable td {
   border: 1px solid var(--border-color);
   padding: 8px;
-  vertical-align: top;
 }
 #xlfTable th {
   background: var(--header-bg);
   color: var(--text-primary);
+  vertical-align: middle;
 }
 #xlfTable td {
   background: var(--bg-secondary);
+  vertical-align: top;
 }
 .trumbowyg-box {
   min-height: 120px;
