@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -204,7 +204,7 @@
                     html = text;
                   } else {
                     const textarea = cell.querySelector(
-                      "textarea.trumbowyg-editor"
+                      "textarea.trumbowyg-editor",
                     );
                     if (textarea) {
                       html = $(textarea).trumbowyg("html");
@@ -227,6 +227,8 @@
                     autogrow: true,
                     tagsToRemove: [],
                     tagsToKeep: [
+                      "p",
+                      "br",
                       "div",
                       "span",
                       "section",
@@ -236,8 +238,20 @@
                       "nav",
                       "aside",
                       "main",
+                      "strong",
+                      "em",
+                      "u",
+                      "s",
+                      "sup",
+                      "sub",
+                      "a",
+                      "ul",
+                      "ol",
+                      "li",
                     ],
-                    semantic: false,
+                    semantic: {
+                      div: true,
+                    },
                     btns: [
                       [
                         "bold",
@@ -305,7 +319,7 @@
           }
           document
             .querySelectorAll(
-              "textarea:not(.trumbowyg-editor):not(.trumbowyg-editor-readonly):not(.readonly-textarea)"
+              "textarea:not(.trumbowyg-editor):not(.trumbowyg-editor-readonly):not(.readonly-textarea)",
             )
             .forEach((textarea) => {
               textarea.addEventListener("input", () => {
@@ -322,7 +336,7 @@
         rows.forEach((row) => {
           const original = row.cells[1].innerText.toLowerCase();
           const textarea = row.cells[3].querySelector(
-            "textarea.trumbowyg-editor"
+            "textarea.trumbowyg-editor",
           );
           const translation = textarea
             ? $(textarea).trumbowyg("html").toLowerCase()
@@ -361,9 +375,28 @@
           let value = "";
           if (textarea.classList.contains("trumbowyg-editor")) {
             value = $(textarea).trumbowyg("html");
-            value = value.replace(/<p><br><\/p>/g, "");
-            value = value.replace(/<p><\/p>/g, "");
-            value = value.replace(/<br>/g, "");
+
+            value = value.replace(/<p>(.*?)<\/p>/g, function (match, content) {
+              if (content.includes("<br>")) {
+                const parts = content.split(/<br\s*\/?>/);
+                const nonEmptyParts = parts
+                  .map((part) => part.trim())
+                  .filter((part) => part.length > 0);
+
+                if (nonEmptyParts.length > 0) {
+                  return nonEmptyParts.map((part) => `<p>${part}</p>`).join("");
+                }
+                return "";
+              }
+              return match;
+            });
+
+            value = value.replace(/<p>\s*<br\s*\/?>\s*<\/p>/g, "");
+
+            value = value.replace(/<p>\s*<\/p>/g, "");
+
+            value = value.replace(/<br\s*\/?>/g, "");
+
             value = value.trim();
           } else {
             value = textarea.value;
@@ -409,11 +442,11 @@
           startX = e.pageX;
           startWidth = parseInt(
             document.defaultView.getComputedStyle(resizerCol).width,
-            10
+            10,
           );
           startNextWidth = parseInt(
             document.defaultView.getComputedStyle(nextCol).width,
-            10
+            10,
           );
           document.documentElement.addEventListener("mousemove", onMouseMove);
           document.documentElement.addEventListener("mouseup", onMouseUp);

@@ -37,6 +37,20 @@ None at the moment. Please report issues on the [GitHub repository](https://gith
 
 ## Release Notes
 
+## [0.0.4] <span style="font-size: smaller;">2026-02-09</span>
+
+### Fixed
+
+- HTML paragraph tags (`<p>`) are now preserved correctly when pasting HTML content
+- Line breaks (`<br>`) inside paragraphs are automatically converted to separate paragraphs when saving
+- Empty paragraphs (`<p></p>` and `<p><br></p>`) are automatically removed when saving
+- Standalone `<br>` tags outside paragraphs are cleaned up when saving
+
+### Changed
+
+- Expanded list of allowed HTML tags to include: `p`, `br`, `strong`, `em`, `u`, `s`, `sup`, `sub`, `a`, `ul`, `ol`, `li`
+- Improved HTML paste handling to better preserve formatting and structure
+
 ## [0.0.3] <span style="font-size: smaller;">2026-01-08</span>
 
 ### Fixed

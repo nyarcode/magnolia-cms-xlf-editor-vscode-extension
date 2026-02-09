@@ -48,13 +48,13 @@ export function activate(context: vscode.ExtensionContext) {
     "nyarcode-xlf-editor.openXlfEditor",
     async (resource?: vscode.Uri) => {
       await openXlfEditor(resource);
-    }
+    },
   );
   context.subscriptions.push(disposable);
 
   const viewDisposable = vscode.window.registerTreeDataProvider(
     "nyarcode-xlf-editor-sidebar-view",
-    new XlfSidebarProvider()
+    new XlfSidebarProvider(),
   );
   context.subscriptions.push(viewDisposable);
 
@@ -63,8 +63,8 @@ export function activate(context: vscode.ExtensionContext) {
       "nyarcode-xlf-editor.sidebar.open",
       async () => {
         await openXlfEditor(undefined);
-      }
-    )
+      },
+    ),
   );
 
   context.subscriptions.push(
@@ -81,17 +81,17 @@ export function activate(context: vscode.ExtensionContext) {
               vscode.Uri.file(path.join(context.extensionPath, "media")),
               vscode.Uri.file(path.join(context.extensionPath, "resources")),
             ],
-          }
+          },
         );
         panel.webview.html = getAboutHtml(context, panel.webview);
-      }
-    )
+      },
+    ),
   );
 
   vscode.window.registerWebviewPanelSerializer("nyarcodeXlfEditor", {
     async deserializeWebviewPanel(
       webviewPanel: vscode.WebviewPanel,
-      state: any
+      state: any,
     ): Promise<void> {
       if (!state || !state.fileUri) {
         return;
@@ -114,7 +114,7 @@ export function activate(context: vscode.ExtensionContext) {
         localResourceRoots: [
           vscode.Uri.file(path.join(context.extensionPath, "media")),
           vscode.Uri.file(
-            path.join(context.extensionPath, "media", "trumbowyg", "ui")
+            path.join(context.extensionPath, "media", "trumbowyg", "ui"),
           ),
           vscode.Uri.file(path.join(context.extensionPath, "resources")),
         ],
@@ -175,7 +175,7 @@ export function activate(context: vscode.ExtensionContext) {
           pairs,
           sourceLanguage,
           targetLanguage,
-          xlfUri.toString()
+          xlfUri.toString(),
         );
 
         webviewPanel.webview.onDidReceiveMessage(async (message) => {
@@ -191,7 +191,7 @@ export function activate(context: vscode.ExtensionContext) {
             const newXlf = updateXlfWithTranslations(currentContent, newPairs);
             await vscode.workspace.fs.writeFile(
               xlfUri,
-              Buffer.from(newXlf, "utf8")
+              Buffer.from(newXlf, "utf8"),
             );
 
             const updatedXlfContent = (
@@ -205,11 +205,11 @@ export function activate(context: vscode.ExtensionContext) {
               updatedData.pairs,
               updatedData.sourceLanguage,
               updatedData.targetLanguage,
-              xlfUri.toString()
+              xlfUri.toString(),
             );
 
             vscode.window.showInformationMessage(
-              "Translations saved to the XLF file."
+              "Translations saved to the XLF file.",
             );
           }
         });
@@ -284,11 +284,11 @@ export function activate(context: vscode.ExtensionContext) {
         localResourceRoots: [
           vscode.Uri.file(path.join(context.extensionPath, "media")),
           vscode.Uri.file(
-            path.join(context.extensionPath, "media", "trumbowyg", "ui")
+            path.join(context.extensionPath, "media", "trumbowyg", "ui"),
           ),
           vscode.Uri.file(path.join(context.extensionPath, "resources")),
         ],
-      }
+      },
     );
 
     openPanels.set(fileKey, panel);
@@ -303,7 +303,7 @@ export function activate(context: vscode.ExtensionContext) {
       pairs,
       sourceLanguage,
       targetLanguage,
-      xlfUri.toString()
+      xlfUri.toString(),
     );
 
     panel.webview.onDidReceiveMessage(async (message) => {
@@ -316,7 +316,7 @@ export function activate(context: vscode.ExtensionContext) {
         const newXlf = updateXlfWithTranslations(xlfContent, newPairs);
         await vscode.workspace.fs.writeFile(
           xlfUri,
-          Buffer.from(newXlf, "utf8")
+          Buffer.from(newXlf, "utf8"),
         );
 
         const updatedXlfContent = (
@@ -330,11 +330,11 @@ export function activate(context: vscode.ExtensionContext) {
           updatedData.pairs,
           updatedData.sourceLanguage,
           updatedData.targetLanguage,
-          xlfUri.toString()
+          xlfUri.toString(),
         );
 
         vscode.window.showInformationMessage(
-          "Translations saved to the XLF file."
+          "Translations saved to the XLF file.",
         );
       }
     });
@@ -347,7 +347,7 @@ async function getWebviewContent(
   pairs: { source: string; target: string }[],
   sourceLanguage: string,
   targetLanguage: string,
-  fileUri: string
+  fileUri: string,
 ): Promise<string> {
   const trumbowygCssPath = vscode.Uri.file(
     path.join(
@@ -355,21 +355,21 @@ async function getWebviewContent(
       "media",
       "trumbowyg",
       "ui",
-      "trumbowyg.min.css"
-    )
+      "trumbowyg.min.css",
+    ),
   );
   let trumbowygCss = fs.readFileSync(trumbowygCssPath.fsPath, "utf8");
   const iconsUri = panel.webview.asWebviewUri(
     vscode.Uri.file(
-      path.join(context.extensionPath, "media", "trumbowyg", "ui", "icons.svg")
-    )
+      path.join(context.extensionPath, "media", "trumbowyg", "ui", "icons.svg"),
+    ),
   );
   trumbowygCss = trumbowygCss.replace(
     /url\(['"]?icons\.svg/g,
-    `url('${iconsUri.toString()}`
+    `url('${iconsUri.toString()}`,
   );
   const jqueryJsPath = vscode.Uri.file(
-    path.join(context.extensionPath, "media", "trumbowyg", "jquery.min.js")
+    path.join(context.extensionPath, "media", "trumbowyg", "jquery.min.js"),
   );
   const jqueryJsUri = panel.webview.asWebviewUri(jqueryJsPath);
   function hasHtmlTags(text: string): boolean {
@@ -408,10 +408,10 @@ async function getWebviewContent(
         }</textarea>`;
       } else {
         originalCell = `<textarea class="readonly-textarea" data-idx="${idx}" readonly>${escapeHtml(
-          pair.source
+          pair.source,
         )}</textarea>`;
         translationCell = `<textarea data-idx="${idx}">${escapeHtml(
-          pair.target || ""
+          pair.target || "",
         )}</textarea>`;
       }
 
@@ -421,17 +421,17 @@ async function getWebviewContent(
     })
     .join("");
   const trumbowygJsPath = vscode.Uri.file(
-    path.join(context.extensionPath, "media", "trumbowyg", "trumbowyg.min.js")
+    path.join(context.extensionPath, "media", "trumbowyg", "trumbowyg.min.js"),
   );
   const trumbowygJsUri = panel.webview.asWebviewUri(trumbowygJsPath);
   const htmlPath = vscode.Uri.file(
-    path.join(context.extensionPath, "media", "webview.html")
+    path.join(context.extensionPath, "media", "webview.html"),
   );
   const cssPath = vscode.Uri.file(
-    path.join(context.extensionPath, "media", "webview.css")
+    path.join(context.extensionPath, "media", "webview.css"),
   );
   const logoPath = vscode.Uri.file(
-    path.join(context.extensionPath, "resources", "logo.png")
+    path.join(context.extensionPath, "resources", "logo.png"),
   );
   const cssUri = panel.webview.asWebviewUri(cssPath);
   const logoUri = panel.webview.asWebviewUri(logoPath);
@@ -461,7 +461,7 @@ function escapeXmlEntities(text: string): string {
 
 function updateXlfWithTranslations(
   xlf: string,
-  pairs: { source: string; target: string }[]
+  pairs: { source: string; target: string }[],
 ): string {
   let idx = 0;
   return xlf.replace(
@@ -473,7 +473,7 @@ function updateXlfWithTranslations(
       betweenSourceTarget,
       targetAttrs,
       targetContent,
-      afterTarget
+      afterTarget,
     ) => {
       const rawTarget = pairs[idx] ? pairs[idx].target : "";
       const newTarget = rawTarget ? escapeXmlEntities(rawTarget) : "";
@@ -485,7 +485,7 @@ function updateXlfWithTranslations(
         targetTag = `<target${targetAttrs}>${newTarget}</target>`;
       }
       return `<trans-unit${beforeSource}<source>${sourceContent}</source>${betweenSourceTarget}${targetTag}${afterTarget}</trans-unit>`;
-    }
+    },
   );
 }
 
@@ -496,10 +496,10 @@ function parseXlf(xlf: string): {
 } {
   const fileMatch =
     xlf.match(
-      /<file[^>]*source-language="([^"]+)"[^>]*target-language="([^"]+)"/
+      /<file[^>]*source-language="([^"]+)"[^>]*target-language="([^"]+)"/,
     ) ||
     xlf.match(
-      /<file[^>]*target-language="([^"]+)"[^>]*source-language="([^"]+)"/
+      /<file[^>]*target-language="([^"]+)"[^>]*source-language="([^"]+)"/,
     );
 
   let sourceLanguage = "en";
